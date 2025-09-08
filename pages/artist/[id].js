@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import styles from '../../styles/ArtistPage.module.css';
+import styles from '../../styles/Artists.module.css';
 
 export default function ArtistPage() {
   const router = useRouter();
