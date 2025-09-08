@@ -15,3 +15,8 @@ a {
 * {
   box-sizing: border-box;
 }
+/* Audio preview globally */
+audio {
+  width: 100%;
+  margin-top: 0.5rem;
+}
