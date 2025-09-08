@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
-  const { name } = req.query; // get artist name from query
+  const { name, limit } = req.query; // get artist name + optional limit
+  const resultLimit = limit ? parseInt(limit, 10) : 5;
 
   if (!name) {
     return res.status(400).json({ error: "Missing artist name" });
@@ -14,7 +15,9 @@ export default async function handler(req, res) {
         Authorization:
           "Basic " +
           Buffer.from(
-            process.env.SPOTIFY_CLIENT_ID + ":" + process.env.SPOTIFY_CLIENT_SECRET
+            process.env.SPOTIFY_CLIENT_ID +
+              ":" +
+              process.env.SPOTIFY_CLIENT_SECRET
           ).toString("base64"),
       },
       body: "grant_type=client_credentials",
@@ -23,27 +26,31 @@ export default async function handler(req, res) {
     const tokenData = await tokenRes.json();
 
     if (!tokenData.access_token) {
-      return res.status(500).json({ error: "Failed to get Spotify access token" });
+      return res
+        .status(500)
+        .json({ error: "Failed to get Spotify access token" });
     }
 
     const accessToken = tokenData.access_token;
 
-    // Search for artists by name, limit to 5 results
+    // Search for artists by name, limit defaults to 5
     const searchRes = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(name)}&type=artist&limit=5`,
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(
+        name
+      )}&type=artist&limit=${resultLimit}`,
       {
         headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
 
     const searchData = await searchRes.json();
-    const artists = searchData.artists?.items; // array of up to 5 matches
+    const artists = searchData.artists?.items;
 
     if (!artists || artists.length === 0) {
       return res.status(404).json({ error: "Artist not found" });
     }
 
-    // Return only necessary fields for the frontend
+    // Return only necessary fields
     const formatted = artists.map((a) => ({
       id: a.id,
       name: a.name,
