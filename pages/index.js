@@ -1,11 +1,11 @@
 import { useState } from "react";
 import Layout from "../components/Layout";
 import styles from "../styles/Home.module.css";
+import Link from "next/link";
 
 export default function Home() {
   const [artistName, setArtistName] = useState("");
   const [artists, setArtists] = useState([]);
-  const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -13,7 +13,6 @@ export default function Home() {
     if (!artistName.trim()) return;
     setLoading(true);
     setError(null);
-    setSelected(null);
     setArtists([]);
     try {
       const res = await fetch(`/api/fetchSpotify?name=${encodeURIComponent(artistName)}`);
@@ -53,13 +52,13 @@ export default function Home() {
 
       {error && <p className={styles.error}>{error}</p>}
 
-      {!selected && artists.length > 0 && (
+      {artists.length > 0 && (
         <div className={styles.grid}>
           {artists.map((a) => (
-            <div
+            <Link
               key={a.id}
+              href={`/artist/${a.id}`}
               className={styles.card}
-              onClick={() => setSelected(a)}
             >
               <img
                 src={a.images?.[0]?.url || "/default-avatar.png"}
@@ -67,36 +66,8 @@ export default function Home() {
               />
               <h3>{a.name}</h3>
               <p>{a.followers?.total?.toLocaleString()} followers</p>
-            </div>
+            </Link>
           ))}
-        </div>
-      )}
-
-      {selected && (
-        <div className={styles.detail}>
-          <img
-            src={selected.images?.[0]?.url || "/default-avatar.png"}
-            alt={selected.name}
-          />
-          <div>
-            <h2>{selected.name}</h2>
-            <p>Followers: {selected.followers?.total?.toLocaleString() ?? 0}</p>
-            <p>Genres: {selected.genres?.join(", ") || "N/A"}</p>
-            <a
-              href={selected.external_urls?.spotify || "#"}
-              target="_blank"
-              rel="noreferrer"
-              className={styles.button}
-            >
-              Open in Spotify
-            </a>
-            <button
-              className={styles.secondaryButton}
-              onClick={() => setSelected(null)}
-            >
-              Back to results
-            </button>
-          </div>
         </div>
       )}
     </Layout>
