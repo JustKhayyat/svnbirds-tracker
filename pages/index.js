@@ -55,17 +55,11 @@ export default function Home() {
       {artists.length > 0 && (
         <div className={styles.grid}>
           {artists.map((a) => (
-            <Link
-              key={a.id}
-              href={`/artist/${a.id}`}
-              className={styles.card}
-            >
-              <img
-                src={a.images?.[0]?.url || "/default-avatar.png"}
-                alt={a.name}
-              />
+            <Link key={a.id} href={`/artist/${a.id}`} className={styles.card}>
+              <img src={a.images?.[0]?.url || "/default-avatar.png"} alt={a.name} />
               <h3>{a.name}</h3>
               <p>{a.followers?.total?.toLocaleString()} followers</p>
+              <p>{a.genres?.join(", ") || "N/A"}</p>
             </Link>
           ))}
         </div>
