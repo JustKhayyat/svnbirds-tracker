@@ -1,86 +1,114 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Home() {
-  const [data, setData] = useState(null);
+  const [artistName, setArtistName] = useState(""); // input value
+  const [artists, setArtists] = useState([]); // array of search results
+  const [selected, setSelected] = useState(null); // chosen artist
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      const res = await fetch("/api/fetchSpotify?artistId=0ZymXKuHy9Sqg2X5IEwLut");
-      const json = await res.json();
-      setData(json);
+  const fetchArtists = async () => {
+    if (!artistName.trim()) return;
+    setLoading(true);
+    setError(null);
+    setSelected(null);
+    setArtists([]);
+    try {
+      const res = await fetch(`/api/fetchSpotify?name=${encodeURIComponent(artistName)}`);
+      const data = await res.json();
+
+      if (res.ok && data.length > 0) {
+        setArtists(data); // array of matches
+      } else {
+        setError(data.error || "No artists found");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Error fetching artists");
+    } finally {
+      setLoading(false);
     }
-    fetchData();
-  }, []);
-
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <p className="text-gray-500 text-lg">Loading...</p>
-      </div>
-    );
-  }
-
-  const { artist, topTracks } = data;
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* HEADER */}
-      <header className="bg-white shadow-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center space-x-4">
-          <img
-            src={artist.images?.[0]?.url}
-            alt={artist.name}
-            className="w-16 h-16 rounded-full shadow-md"
+    <div className="min-h-screen bg-gray-100 font-sans">
+      <header className="bg-white shadow p-4 flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+        <h1 className="text-xl font-bold">SVNBIRDS Tracker</h1>
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Enter Spotify Artist Name"
+            value={artistName}
+            onChange={(e) => setArtistName(e.target.value)}
+            className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <div>
-            <h1 className="text-2xl font-bold">{artist.name}</h1>
-            <p className="text-gray-600">{artist.followers.total.toLocaleString()} followers</p>
-          </div>
+          <button
+            onClick={fetchArtists}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <h2 className="text-xl font-semibold mb-6">Top Tracks</h2>
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {error && <p className="text-red-500 mb-4">{error}</p>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topTracks.map((track, i) => {
-            // MOCK STREAMS: Randomized for demo
-            const streams = Math.floor(Math.random() * 5000000) + 100000;
-
-            return (
+        {/* Multiple search results */}
+        {!selected && artists.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {artists.map((a) => (
               <div
-                key={track.id}
-                className="bg-white rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col"
+                key={a.id}
+                onClick={() => setSelected(a)}
+                className="cursor-pointer p-4 border rounded hover:shadow"
               >
                 <img
-                  src={track.album.images?.[0]?.url}
-                  alt={track.name}
-                  className="rounded-xl mb-4"
+                  src={a.images?.[0]?.url || "/default-avatar.png"}
+                  alt={a.name}
+                  className="w-24 h-24 rounded-full mx-auto"
                 />
-                <h3 className="font-semibold text-lg mb-1">{track.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{track.album.name}</p>
-
-                {/* STREAMS + POPULARITY */}
-                <p className="text-sm text-gray-800 font-medium">
-                  {streams.toLocaleString()} streams
-                </p>
-                <p className="text-xs text-gray-500">
-                  Popularity score: {track.popularity}/100
-                </p>
-
-                <a
-                  href={track.external_urls.spotify}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-block text-center bg-green-500 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-600 transition"
-                >
-                  Open in Spotify
-                </a>
+                <p className="text-center mt-2 font-semibold">{a.name}</p>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Selected artist info */}
+        {selected && (
+          <div className="flex items-center space-x-6 mt-6">
+            <img
+              src={selected.images?.[0]?.url || "/default-avatar.png"}
+              alt={selected.name}
+              className="w-32 h-32 rounded-full shadow-md object-cover"
+            />
+            <div>
+              <h2 className="text-2xl font-bold">{selected.name}</h2>
+              <p>Followers: {selected.followers?.total ?? 0}</p>
+              <p>Genres: {selected.genres?.join(", ") || "N/A"}</p>
+              <a
+                href={selected.external_urls?.spotify || "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Open in Spotify
+              </a>
+              <button
+                onClick={() => setSelected(null)}
+                className="ml-4 bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+              >
+                Back to results
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!selected && artists.length === 0 && !error && (
+          <p className="text-gray-500 mt-6">
+            Enter an artist name above and click "Search" to see results.
+          </p>
+        )}
       </main>
     </div>
   );
