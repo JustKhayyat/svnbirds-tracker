@@ -14,17 +14,17 @@ export default function Dashboard() {
     { 
       name: "RELEASES", 
       description: "View and manage upcoming releases.", 
-      link: "#" 
+      link: "/releases" 
     },
     { 
       name: "MERCH", 
       description: "Manage merchandise and sales.", 
-      link: "#" 
+      link: "/merch" 
     },
     { 
       name: "TASKS", 
       description: "Track tasks and deadlines for your team.", 
-      link: "#" 
+      link: "/tasks" 
     },
     { 
       name: "VAULT", 
@@ -32,14 +32,6 @@ export default function Dashboard() {
       link: "#" 
     },
   ];
-
-  const handleModuleClick = (mod) => {
-    if (mod.link !== "#") {
-      window.location.href = mod.link; // Open module page directly
-    } else {
-      setActiveModule(mod.name);
-    }
-  };
 
   return (
     <div className={styles.dashboard}>
@@ -52,14 +44,21 @@ export default function Dashboard() {
       <main className={styles.main}>
         <div className={styles.modulesContainer}>
           {modules.map((mod) => (
-            <div
-              key={mod.name}
-              className={styles.module}
-              onClick={() => handleModuleClick(mod)}
-            >
-              <h2>{mod.name}</h2>
-              <p>{mod.description}</p>
-            </div>
+            mod.link !== "#" ? (
+              <Link key={mod.name} href={mod.link} className={styles.module}>
+                <h2>{mod.name}</h2>
+                <p>{mod.description}</p>
+              </Link>
+            ) : (
+              <div
+                key={mod.name}
+                className={styles.module}
+                onClick={() => setActiveModule(mod.name)}
+              >
+                <h2>{mod.name}</h2>
+                <p>{mod.description}</p>
+              </div>
+            )
           ))}
         </div>
       </main>
