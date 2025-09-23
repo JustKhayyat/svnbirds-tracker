@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Release {
+  id              String              @id @default(cuid())
+  title           String?
+  primaryArtist   String?
+  artists         String[]            @default([])
+  releaseDate     DateTime?
+  status          String              @default("planned")
+  platformLinks   Json
+  coverArt        String?
+  type            String?             @default("single")
+  notes           String?
+  label           String?
+  upc             String?             @unique
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  statementLines  StatementLine[]
+  splitAgreements SplitAgreement[]
+
+  @@map("releases")
+}
+
+model Collaborator {
+  id             String               @id @default(cuid())
+  name           String?
+  email          String?              @unique
+  role           String?
+  payeeReference String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  splits         StatementLineSplit[]
+  agreements     SplitAgreement[]
+
+  @@map("collaborators")
+}
+
+model RoyaltyStatement {
+  id            String              @id @default(cuid())
+  provider      String
+  reference     String?
+  periodLabel   String?
+  periodStart   DateTime?
+  periodEnd     DateTime?
+  statementDate DateTime?
+  currency      String
+  totalAmount   Float               @default(0)
+  totalUnits    Float               @default(0)
+  metadata      Json
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  lines         StatementLine[]
+  batches       RoyaltyImportBatch[]
+
+  @@map("royalty_statements")
+}
+
+model StatementLine {
+  id           String              @id @default(cuid())
+  statementId  String
+  releaseId    String?
+  sequence     Int?
+  trackTitle   String?
+  isrc         String?
+  usageDate    DateTime?
+  service      String?
+  territory    String?
+  units        Float               @default(0)
+  netRevenue   Float               @default(0)
+  grossRevenue Float?
+  fee          Float?
+  currency     String
+  payoutStatus String              @default("pending")
+  metadata     Json
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  statement    RoyaltyStatement    @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  release      Release?            @relation(fields: [releaseId], references: [id], onDelete: SetNull)
+  splits       StatementLineSplit[]
+
+  @@map("statement_lines")
+}
+
+model StatementLineSplit {
+  id              String           @id @default(cuid())
+  statementLineId String
+  collaboratorId  String?
+  sharePercentage Float?
+  amount          Float?
+  payoutStatus    String           @default("pending")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  statementLine   StatementLine    @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
+  collaborator    Collaborator?    @relation(fields: [collaboratorId], references: [id], onDelete: SetNull)
+
+  @@map("statement_line_splits")
+}
+
+model SplitAgreement {
+  id             String        @id @default(cuid())
+  releaseId      String
+  collaboratorId String
+  sharePercentage Float?
+  agreementType  String?
+  effectiveDate  DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  release        Release       @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  collaborator   Collaborator  @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@unique([releaseId, collaboratorId])
+  @@map("split_agreements")
+}
+
+model RoyaltyImportBatch {
+  id                String           @id @default(cuid())
+  statementId       String
+  source            String
+  importedAt        DateTime         @default(now())
+  importedBy        String?
+  originalFilename  String?
+  lineItemCount     Int
+  releaseCount      Int
+  collaboratorCount Int
+  totalRevenue      Float            @default(0)
+  currency          String
+  status            String           @default("completed")
+  warnings          Json
+  errors            Json
+  statement         RoyaltyStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  @@map("royalty_import_batches")
+}
