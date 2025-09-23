@@ -2,6 +2,18 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.scdn.co",
+      },
+      {
+        protocol: "https",
+        hostname: "**.spotifycdn.com",
+      },
+    ],
+  },
 
   // For API routes, make sure fetch works server-side
   experimental: {

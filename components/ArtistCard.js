@@ -1,3 +1,5 @@
+import AvatarImage from "./AvatarImage";
+
 export default function ArtistCard({ artist, onSelect, selected }) {
   if (!artist) return null;
 
@@ -5,9 +7,11 @@ export default function ArtistCard({ artist, onSelect, selected }) {
   if (selected) {
     return (
       <div className="flex flex-col md:flex-row items-center md:items-start space-x-0 md:space-x-8 space-y-6 md:space-y-0 bg-gray-800 p-6 rounded-lg shadow-lg">
-        <img
-          src={artist.images?.[0]?.url || "/default-avatar.png"}
+        <AvatarImage
+          src={artist.images?.[0]?.url}
           alt={artist.name}
+          width={160}
+          height={160}
           className="w-40 h-40 rounded-full shadow-md object-cover border border-gray-700"
         />
         <div>
@@ -33,9 +37,11 @@ export default function ArtistCard({ artist, onSelect, selected }) {
       onClick={() => onSelect(artist)}
       className="cursor-pointer bg-gray-800 p-6 rounded-lg shadow hover:shadow-xl transition transform hover:-translate-y-1"
     >
-      <img
-        src={artist.images?.[0]?.url || "/default-avatar.png"}
+      <AvatarImage
+        src={artist.images?.[0]?.url}
         alt={artist.name}
+        width={128}
+        height={128}
         className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border border-gray-700"
       />
       <p className="text-center text-lg font-semibold">{artist.name}</p>
