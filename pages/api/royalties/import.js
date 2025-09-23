@@ -1,7 +1,7 @@
 import { parseMultipartForm } from '../../../lib/api/multipart';
 import { parseCsv } from '../../../lib/vendor/papaparse';
-import { normalizeEmpireRows } from '../../../lib/royalties/normalizer';
-import { saveImportBatch, getImportHistory } from '../../../lib/db/royalties';
+import { normalizeEmpireRows } from '../../../lib/royalties-normalizer';
+import { saveImportBatch, getImportHistory } from '../../../lib/royalties';
 
 const ADMIN_TOKEN = process.env.ADMIN_API_TOKEN || process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
 
