@@ -21,10 +21,15 @@ export default function Dashboard() {
       description: "Manage merchandise and sales.", 
       link: "/merch" 
     },
-    { 
-      name: "TASKS", 
-      description: "Track tasks and deadlines for your team.", 
-      link: "/tasks" 
+    {
+      name: "TASKS",
+      description: "Track tasks and deadlines for your team.",
+      link: "/tasks"
+    },
+    {
+      name: "ROYALTIES",
+      description: "Import statements and manage collaborator payouts.",
+      link: "/royalties/import"
     },
     { 
       name: "VAULT", 

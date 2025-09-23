@@ -1,5 +1,8 @@
+import Image from "next/image";
 import { useState } from "react";
 import Layout from "../components/Layout";
+
+const DEFAULT_AVATAR = "/default-avatar.svg";
 
 export default function Artist() {
   const [artist, setArtist] = useState(null);
@@ -26,9 +29,11 @@ export default function Artist() {
       {artist && (
         <div className="bg-gray-900 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bebas mb-4">{artist.name}</h2>
-          <img
-            src={artist.images?.[0]?.url || "/default-avatar.png"}
+          <Image
+            src={artist.images?.[0]?.url || DEFAULT_AVATAR}
             alt={artist.name}
+            width={160}
+            height={160}
             className="w-40 h-40 rounded-full object-cover border border-gray-700 mb-4"
           />
           <p className="text-gray-400">Followers: {artist.followers?.total?.toLocaleString()}</p>

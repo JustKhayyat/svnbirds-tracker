@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "../styles/Home.module.css";
 
 export default function Layout({ children }) {
@@ -6,7 +7,7 @@ export default function Layout({ children }) {
       <header className={styles.header}>
         <h1 className={styles.logo}>SVNBIRDS Tracker</h1>
         <nav className={styles.nav}>
-          <a href="/">Home</a>
+          <Link href="/">Home</Link>
           <a href="https://open.spotify.com/" target="_blank" rel="noreferrer">
             Spotify
           </a>
