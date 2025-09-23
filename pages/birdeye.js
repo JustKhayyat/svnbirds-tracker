@@ -1,6 +1,9 @@
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "../styles/BirdEye.module.css";
+
+const DEFAULT_AVATAR = "/default-avatar.svg";
 
 export default function BirdEye() {
   const [artistName, setArtistName] = useState("");
@@ -95,7 +98,12 @@ export default function BirdEye() {
               className={styles.card}
               onClick={() => fetchFullArtistInfo(a.id)}
             >
-              <img src={a.images?.[0]?.url || "/default-avatar.png"} alt={a.name} />
+              <Image
+                src={a.images?.[0]?.url || DEFAULT_AVATAR}
+                alt={a.name}
+                width={100}
+                height={100}
+              />
               <h3>{a.name}</h3>
               <p>{a.followers?.total?.toLocaleString()} followers</p>
               <p>{a.genres?.join(", ")}</p>
@@ -107,7 +115,12 @@ export default function BirdEye() {
       {/* Full artist info */}
       {selected && (
         <div className={styles.detail}>
-          <img src={selected.images?.[0]?.url || "/default-avatar.png"} alt={selected.name} />
+          <Image
+            src={selected.images?.[0]?.url || DEFAULT_AVATAR}
+            alt={selected.name}
+            width={180}
+            height={180}
+          />
           <div className={styles.artistInfo}>
             <h2>{selected.name}</h2>
             <p>Followers: {selected.followers?.total?.toLocaleString() ?? 0}</p>
@@ -122,10 +135,20 @@ export default function BirdEye() {
               <h3>Top Tracks</h3>
               {topTracks.map((track) => (
                 <div key={track.id} className={styles.track}>
-                  <img src={track.album.images[0]?.url} alt={track.name} />
-                  <p>{track.name} — {track.album.name}</p>
+                  <Image
+                    src={track.album?.images?.[0]?.url || DEFAULT_AVATAR}
+                    alt={track.name}
+                    width={300}
+                    height={300}
+                  />
+                  <p>
+                    {track.name}
+                    {track.album?.name ? ` — ${track.album.name}` : ""}
+                  </p>
                   {track.preview_url && <audio controls src={track.preview_url}></audio>}
-                  <a href={track.external_urls.spotify} target="_blank" rel="noreferrer">Listen</a>
+                  {track.external_urls?.spotify && (
+                    <a href={track.external_urls.spotify} target="_blank" rel="noreferrer">Listen</a>
+                  )}
                 </div>
               ))}
             </div>
@@ -135,9 +158,19 @@ export default function BirdEye() {
               <h3>Albums</h3>
               {albums.map((album) => (
                 <div key={album.id} className={styles.albumCard}>
-                  <img src={album.images[0]?.url} alt={album.name} />
-                  <p>{album.name} ({album.release_date.split("-")[0]})</p>
-                  <a href={album.external_urls.spotify} target="_blank" rel="noreferrer">Listen</a>
+                  <Image
+                    src={album.images?.[0]?.url || DEFAULT_AVATAR}
+                    alt={album.name}
+                    width={300}
+                    height={300}
+                  />
+                  <p>
+                    {album.name}
+                    {album.release_date ? ` (${album.release_date.split("-")[0]})` : ""}
+                  </p>
+                  {album.external_urls?.spotify && (
+                    <a href={album.external_urls.spotify} target="_blank" rel="noreferrer">Listen</a>
+                  )}
                 </div>
               ))}
             </div>
@@ -147,10 +180,17 @@ export default function BirdEye() {
               <h3>Related Artists</h3>
               {relatedArtists.map((ra) => (
                 <div key={ra.id} className={styles.relatedCard}>
-                  <img src={ra.images[0]?.url} alt={ra.name} />
+                  <Image
+                    src={ra.images?.[0]?.url || DEFAULT_AVATAR}
+                    alt={ra.name}
+                    width={300}
+                    height={300}
+                  />
                   <p>{ra.name}</p>
-                  <p>{ra.genres.join(", ")}</p>
-                  <a href={ra.external_urls.spotify} target="_blank" rel="noreferrer">View</a>
+                  <p>{ra.genres?.length ? ra.genres.join(", ") : "N/A"}</p>
+                  {ra.external_urls?.spotify && (
+                    <a href={ra.external_urls.spotify} target="_blank" rel="noreferrer">View</a>
+                  )}
                 </div>
               ))}
             </div>

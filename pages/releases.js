@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import styles from '../styles/Releases.module.css'
 
@@ -106,7 +107,21 @@ export default function ReleasesPage() {
       <ul className={styles.list}>
         {releases.map(r => (
           <li key={r.id} className={styles.releaseItem}>
-            {r.coverArt && <img src={r.coverArt} alt={r.title} className={styles.coverArt} />}
+            {r.coverArt ? (
+              <Image
+                src={r.coverArt}
+                alt={
+                  r.title ||
+                  (Array.isArray(r.artist) && r.artist.length
+                    ? `${r.artist.join(', ')} cover`
+                    : 'Release cover art')
+                }
+                width={80}
+                height={80}
+                className={styles.coverArt}
+                unoptimized
+              />
+            ) : null}
             <div>
               <strong>{r.title}</strong> ({r.type}) <br />
               By {r.artist.join(', ')} <br />
