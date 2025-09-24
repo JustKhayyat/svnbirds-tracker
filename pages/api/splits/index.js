@@ -1,4 +1,10 @@
 import prisma from '../../../lib/prisma';
+import {
+  SHARE_CAP,
+  getReleaseShareTotals,
+  willExceedShareCap,
+  formatShareForMessage,
+} from '../../../lib/splitAgreements';
 
 const ADMIN_TOKEN = process.env.ADMIN_API_TOKEN || process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
 
@@ -92,6 +98,14 @@ export default async function handler(req, res) {
     const share = toNumber(sharePercentage, null);
     if (share == null || share < 0 || share > 100) {
       res.status(400).json({ error: 'sharePercentage must be between 0 and 100.' });
+      return;
+    }
+
+    const { utilized, remaining } = await getReleaseShareTotals({ releaseId: String(releaseId) });
+    if (willExceedShareCap(utilized, share)) {
+      res.status(400).json({
+        error: `Split percentages for this release cannot exceed ${SHARE_CAP}%. Only ${formatShareForMessage(remaining)}% remains available.`,
+      });
       return;
     }
 
