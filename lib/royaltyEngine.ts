@@ -69,18 +69,33 @@ async function ensureSplitsForLine(
   now: Date
 ): Promise<void> {
   const agreements = line.release?.splitAgreements ?? [];
+  if (!agreements.length) {
+    return;
+  }
+
+  const existingCollaborators = new Set(
+    line.splits
+      .map((split) => split.collaboratorId)
+      .filter((value): value is string => Boolean(value))
+  );
+
   const validAgreements = agreements.filter(
     (agreement) => agreement.collaboratorId && typeof agreement.sharePercentage === 'number'
   );
 
   for (const agreement of validAgreements) {
+    const collaboratorId = agreement.collaboratorId!;
+    if (existingCollaborators.has(collaboratorId)) {
+      continue;
+    }
+
     const share = toNumber(agreement.sharePercentage, 0);
-    if (!agreement.collaboratorId || share <= 0) continue;
+    if (share <= 0) continue;
 
     const createdSplit = await client.statementLineSplit.create({
       data: {
         statementLineId: line.id,
-        collaboratorId: agreement.collaboratorId,
+        collaboratorId,
         sharePercentage: share,
         amount: 0,
         payoutStatus: 'pending',
@@ -88,6 +103,8 @@ async function ensureSplitsForLine(
         updatedAt: now,
       },
     });
+
+    existingCollaborators.add(collaboratorId);
 
     // also push into the line representation so subsequent logic can reuse the split record
     line.splits.push(createdSplit);
@@ -245,11 +262,7 @@ export async function generatePayables(
     const now = new Date();
 
     for (const line of lines) {
-      const eligibleSplits = line.splits.filter((split) => allowedStatuses.includes(split.payoutStatus));
-
-      if (!eligibleSplits.length && !line.splits.length) {
-        await ensureSplitsForLine(tx, line, now);
-      }
+      await ensureSplitsForLine(tx, line, now);
 
       const splits = await processLineSplits(tx, line, allowedStatuses, now);
       if (!splits.length) {
