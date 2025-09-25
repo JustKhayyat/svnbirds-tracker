@@ -1,4 +1,4 @@
-import { parseMultipartForm } from '../../../lib/api/multipart';
+import { parseForm, MAX_FILE_SIZE } from '../../../lib/api/parseForm';
 import { parseCsv } from '../../../lib/vendor/papaparse';
 import { normalizeEmpireRows } from '../../../lib/royalties-normalizer';
 import { saveImportBatch, getImportHistory } from '../../../lib/royalties';
@@ -21,30 +21,30 @@ export const config = {
 
 export default async function handler(req, res) {
   if (!isAuthorized(req)) {
-    res.status(401).json({ error: 'Unauthorized: missing or invalid admin token.' });
+    res.status(401).json({ ok: false, error: 'Unauthorized: missing or invalid admin token.' });
     return;
   }
 
   if (req.method === 'GET') {
     const history = await getImportHistory();
-    res.status(200).json({ history });
+    res.status(200).json({ ok: true, history });
     return;
   }
 
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'GET, POST');
-    res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    res.status(405).json({ ok: false, error: `Method ${req.method} Not Allowed` });
     return;
   }
 
   const contentType = req.headers['content-type'] || '';
   if (!contentType.includes('multipart/form-data')) {
-    res.status(400).json({ error: 'Requests must be multipart/form-data with a CSV file.' });
+    res.status(400).json({ ok: false, error: 'Requests must be multipart/form-data with a CSV file.' });
     return;
   }
 
   try {
-    const { files } = await parseMultipartForm(req);
+    const { files } = await parseForm(req);
     if (!files.length) {
       throw new Error('CSV file missing from request. Expected form field "file".');
     }
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
     });
 
     res.status(200).json({
-      success: true,
+      ok: true,
       batchId: result.batchId,
       statementId: result.statementId,
       summary: {
@@ -85,6 +85,11 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    res.status(400).json({ error: error.message || 'Import failed.' });
+    const statusCode = error.statusCode || (error.code === 'LIMIT_FILE_SIZE' ? 413 : 400);
+    if (statusCode === 413 || error.message === 'File too large') {
+      res.status(413).json({ ok: false, error: 'File too large', maxFileSize: MAX_FILE_SIZE });
+      return;
+    }
+    res.status(statusCode).json({ ok: false, error: error.message || 'Import failed.' });
   }
 }
