@@ -6,6 +6,50 @@ function isAuthorized(req) {
   return typeof headerToken === 'string' && headerToken === ADMIN_TOKEN;
 }
 
+async function ensureBucketExists({ supabaseUrl, serviceKey, bucket }) {
+  const baseUrl = supabaseUrl.replace(/\/$/, '');
+  const headers = {
+    Authorization: `Bearer ${serviceKey}`,
+    apikey: serviceKey,
+    'Content-Type': 'application/json',
+  };
+
+  try {
+    const getResponse = await fetch(`${baseUrl}/storage/v1/bucket/${encodeURIComponent(bucket)}`, {
+      headers,
+    });
+
+    if (getResponse.ok) {
+      return true;
+    }
+
+    if (getResponse.status !== 404) {
+      return false;
+    }
+  } catch (error) {
+    // If fetching the bucket status fails unexpectedly, attempt to create it anyway.
+  }
+
+  try {
+    const createResponse = await fetch(`${baseUrl}/storage/v1/bucket`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        name: bucket,
+        public: false,
+      }),
+    });
+
+    if (createResponse.ok || createResponse.status === 409) {
+      return true;
+    }
+  } catch (error) {
+    // Ignore and surface failure to caller.
+  }
+
+  return false;
+}
+
 export default async function handler(req, res) {
   if (!isAuthorized(req)) {
     res.status(401).json({ error: 'Unauthorized: missing or invalid admin token.' });
@@ -37,6 +81,13 @@ export default async function handler(req, res) {
   )}`;
 
   try {
+    const bucketReady = await ensureBucketExists({ supabaseUrl, serviceKey, bucket });
+
+    if (!bucketReady) {
+      res.status(500).json({ error: `Supabase bucket "${bucket}" is not available.` });
+      return;
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
