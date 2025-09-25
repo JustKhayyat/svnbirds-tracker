@@ -132,9 +132,21 @@ export default function RoyaltiesImportPage() {
           'x-admin-token': ADMIN_TOKEN,
         },
       });
-      const payload = await response.json();
+      const text = await response.text();
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch (parseError) {
+        payload = { raw: text };
+      }
+
       if (!response.ok) {
-        throw new Error(payload.error || 'Import failed.');
+        const errorMessage = payload && payload.error ? payload.error : `${response.status} ${response.statusText}: ${text}`;
+        throw new Error(errorMessage);
+      }
+
+      if (!payload || payload.ok !== true) {
+        throw new Error((payload && payload.error) || 'Import failed.');
       }
 
       setStatus({ type: 'success', message: 'Import completed successfully.' });
