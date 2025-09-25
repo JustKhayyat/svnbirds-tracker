@@ -1,6 +1,0 @@
-{
-  "css.validate": false,
-  "tailwindCSS.includeLanguages": {
-    "plaintext": "javascript"
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "swr": ["lib/swr-lite.js"]
-    }
-  }
-}
-

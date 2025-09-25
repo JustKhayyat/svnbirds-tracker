@@ -1,70 +1,68 @@
-// pages/api/royalties/import.js
+import { parseMultipartForm } from '../../../lib/api/multipart';
 import { parseCsv } from '../../../lib/vendor/papaparse';
 import { normalizeEmpireRows } from '../../../lib/royalties-normalizer';
 import { saveImportBatch, getImportHistory } from '../../../lib/royalties';
-import { supabaseAdmin } from '../../../lib/supabaseServer';
 
 const ADMIN_TOKEN = process.env.ADMIN_API_TOKEN || process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
-const BUCKET = process.env.SUPABASE_BUCKET || 'royalty';
 
 function isAuthorized(req) {
   const headerToken = req.headers['x-admin-token'];
-  return Boolean(ADMIN_TOKEN) && typeof headerToken === 'string' && headerToken === ADMIN_TOKEN;
+  if (!ADMIN_TOKEN) {
+    return false;
+  }
+  return typeof headerToken === 'string' && headerToken === ADMIN_TOKEN;
 }
 
-// JSON body only. No multipart.
 export const config = {
-  api: { bodyParser: { sizeLimit: '1mb' } },
+  api: {
+    bodyParser: false,
+  },
 };
 
 export default async function handler(req, res) {
   if (!isAuthorized(req)) {
-    res.status(401).json({ ok: false, error: 'Unauthorized: missing or invalid admin token.' });
+    res.status(401).json({ error: 'Unauthorized: missing or invalid admin token.' });
     return;
   }
 
   if (req.method === 'GET') {
     const history = await getImportHistory();
-    res.status(200).json({ ok: true, history });
+    res.status(200).json({ history });
     return;
   }
 
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'GET, POST');
-    res.status(405).json({ ok: false, error: `Method ${req.method} Not Allowed` });
+    res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    return;
+  }
+
+  const contentType = req.headers['content-type'] || '';
+  if (!contentType.includes('multipart/form-data')) {
+    res.status(400).json({ error: 'Requests must be multipart/form-data with a CSV file.' });
     return;
   }
 
   try {
-    const { path } = req.body || {};
-    if (!path) {
-      res.status(400).json({ ok: false, error: 'Missing "path" in JSON body.' });
-      return;
+    const { files } = await parseMultipartForm(req);
+    if (!files.length) {
+      throw new Error('CSV file missing from request. Expected form field "file".');
     }
 
-    // Download CSV from Supabase Storage
-    const { data, error } = await supabaseAdmin.storage.from(BUCKET).download(path);
-    if (error) {
-      res.status(500).json({ ok: false, error: `Storage download failed: ${error.message}` });
-      return;
-    }
-
-    // data is a Blob in Node; convert to text
-    const csvText = await data.text();
-
+    const upload = files.find((file) => file.fieldName === 'file') || files[0];
+    const csvText = upload.buffer.toString('utf8');
     const parsed = parseCsv(csvText, { header: true, skipEmptyLines: true });
-    if (!parsed.data?.length) {
-      res.status(400).json({ ok: false, error: 'No data rows detected in the CSV.' });
-      return;
+
+    if (!parsed.data.length) {
+      throw new Error('No data rows were detected in the uploaded CSV.');
     }
 
     const normalized = normalizeEmpireRows(parsed.data);
-
     const result = await saveImportBatch({
       ...normalized,
       batchMeta: {
         source: 'EMPIRE',
-        originalFilename: path.split('/').pop() || 'uploaded.csv',
+        originalFilename: upload.filename,
         importedBy: 'admin-api',
         status: 'completed',
         warnings: normalized.warnings,
@@ -73,7 +71,7 @@ export default async function handler(req, res) {
     });
 
     res.status(200).json({
-      ok: true,
+      success: true,
       batchId: result.batchId,
       statementId: result.statementId,
       summary: {
@@ -86,7 +84,7 @@ export default async function handler(req, res) {
         parseErrors: parsed.errors,
       },
     });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e?.message || 'Import failed.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Import failed.' });
   }
 }
