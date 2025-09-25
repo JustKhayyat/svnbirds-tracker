@@ -1,0 +1,340 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem clamp(1.25rem, 2vw, 3rem);
+  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.2), transparent 50%),
+    #020617;
+  min-height: 100vh;
+  color: #f8fafc;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 2.5vw, 3rem);
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 720px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 1rem;
+}
+
+.sessionControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sessionMeta {
+  margin: 0 1rem 0 0;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.primaryButton,
+.secondaryButton,
+.refreshButton {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.35);
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(56, 189, 248, 0.4);
+}
+
+.secondaryButton {
+  background: rgba(148, 163, 184, 0.15);
+  color: #f8fafc;
+}
+
+.secondaryButton:hover {
+  transform: translateY(-1px);
+  background: rgba(148, 163, 184, 0.25);
+}
+
+.refreshButton {
+  background: rgba(56, 189, 248, 0.2);
+  color: #bfdbfe;
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.authCard {
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 18px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  max-width: 720px;
+}
+
+.authCard h2 {
+  margin: 0 0 0.75rem;
+}
+
+.authCard p {
+  margin-top: 0;
+  color: rgba(226, 232, 240, 0.8);
+  line-height: 1.6;
+}
+
+.authForm {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field span {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.field input {
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.error {
+  color: #fca5a5;
+  margin: 0.25rem 0 0;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.75rem;
+  align-items: flex-start;
+}
+
+.columnPrimary,
+.columnSecondary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+}
+
+.upcomingList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.upcomingList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.upcomingTitle {
+  margin: 0;
+  font-weight: 600;
+}
+
+.upcomingMeta {
+  margin: 0.35rem 0 0;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.9rem;
+}
+
+.upcomingAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.upcomingStatus {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(96, 165, 250, 0.9);
+}
+
+.emptyState {
+  margin: 0;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.72);
+  border-radius: 14px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.collaboratorCard,
+.agreementsCard {
+  background: rgba(15, 23, 42, 0.72);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+}
+
+.collaboratorCard dl {
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.collaboratorCard dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.7);
+  margin: 0 0 0.35rem;
+}
+
+.collaboratorCard dd {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.asOf {
+  margin-top: 1rem;
+  color: rgba(148, 163, 184, 0.8);
+  font-size: 0.85rem;
+}
+
+.agreementsCard ul {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.agreementsCard li {
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.agreementTitle {
+  margin: 0;
+  font-weight: 600;
+}
+
+.agreementMeta {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.errorBanner {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(248, 113, 113, 0.2);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+@media (max-width: 1024px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .columnSecondary {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .collaboratorCard,
+  .agreementsCard {
+    flex: 1 1 280px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1.75rem 1rem 3rem;
+  }
+
+  .sessionControls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .upcomingList li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .upcomingAmount {
+    align-items: flex-start;
+  }
+}
+

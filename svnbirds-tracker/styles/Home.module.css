@@ -1,0 +1,191 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  text-align: center;
+}
+
+/* Header */
+.header {
+  padding: 2rem 1rem;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.tagline {
+  margin: 0.75rem auto 0;
+  max-width: 520px;
+  color: #475569;
+  font-size: 1rem;
+}
+
+/* Main modules container */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  padding: 0 1.5rem 3rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+
+.sectionHeader p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.modulesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+
+/* Individual module cards */
+.module {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 200px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(148, 163, 184, 0.25);
+}
+
+.module h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+}
+
+.module h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+}
+
+.module p {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0;
+}
+
+.moduleBadge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #0f172a;
+  color: #fff;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.moduleLocked {
+  pointer-events: none;
+  opacity: 0.6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.adminButton {
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.adminForm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.adminForm input {
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  min-width: 220px;
+}
+
+.adminForm button {
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.adminError {
+  width: 100%;
+  color: #b91c1c;
+  margin: 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Footer */
+.footer {
+  padding: 1rem 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modulesContainer {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .module {
+    width: 70%;
+    max-width: 300px;
+    padding: 1.5rem;
+  }
+
+  .adminForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -1,0 +1,230 @@
+/* General page layout */
+.trackerPage {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  color: #111;
+  background-color: #f5f5f5;
+}
+
+/* Search Bar */
+.searchBar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.searchBar input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px 0 0 8px;
+  width: 300px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.searchBar input:focus {
+  border-color: #888;
+}
+
+.searchBar button {
+  padding: 0.75rem 1rem;
+  border: none;
+  background-color: #000;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.searchBar button:hover {
+  background-color: #333;
+}
+
+/* Error Message */
+.error {
+  text-align: center;
+  color: #d00;
+  margin-bottom: 1rem;
+}
+
+/* Grid for search results */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Card for artist search results */
+.card {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.card img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+
+/* Selected artist detail view */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.detail img {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  align-self: center;
+}
+
+/* Artist info section */
+.artistInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+}
+
+.artistInfo h2 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.artistInfo p {
+  margin: 0;
+  color: #555;
+}
+
+/* Buttons */
+.button {
+  display: inline-block;
+  margin-top: 0.5rem;
+  background-color: #000;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.button:hover {
+  background-color: #333;
+}
+
+.secondaryButton {
+  margin-top: 1rem;
+  background-color: #eee;
+  color: #111;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondaryButton:hover {
+  background-color: #ddd;
+}
+
+/* Sections inside detail view */
+.section {
+  margin-top: 2rem;
+}
+
+.section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+/* Tracks, Albums, Related Artists */
+.track, .albumCard, .relatedCard {
+  display: inline-block;
+  margin-right: 1rem;
+  background-color: #f9f9f9;
+  padding: 0.75rem;
+  border-radius: 12px;
+  width: 180px;
+  vertical-align: top;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.track img, .albumCard img, .relatedCard img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.track audio, .albumCard audio, .relatedCard audio {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* Centered page title */
+.pageTitle {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Back to dashboard button */
+.backButton {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.backButton:hover {
+  background-color: #333;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .track, .albumCard, .relatedCard {
+    width: 140px;
+    margin-right: 0.5rem;
+  }
+
+  .detail img {
+    width: 150px;
+    height: 150px;
+  }
+}
