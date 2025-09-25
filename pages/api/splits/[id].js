@@ -1,4 +1,10 @@
 import prisma from '../../../lib/prisma';
+import {
+  SHARE_CAP,
+  getReleaseShareTotals,
+  willExceedShareCap,
+  formatShareForMessage,
+} from '../../../lib/splitAgreements';
 
 const ADMIN_TOKEN = process.env.ADMIN_API_TOKEN || process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
 
@@ -111,6 +117,30 @@ export default async function handler(req, res) {
     if (!Object.keys(updates).length) {
       res.status(400).json({ error: 'No updatable fields were provided.' });
       return;
+    }
+
+    const existing = await prisma.splitAgreement.findUnique({
+      where: { id },
+      select: { releaseId: true },
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Split agreement not found.' });
+      return;
+    }
+
+    if (updates.sharePercentage != null) {
+      const { utilized, remaining } = await getReleaseShareTotals({
+        releaseId: existing.releaseId,
+        excludeAgreementId: id,
+      });
+
+      if (willExceedShareCap(utilized, updates.sharePercentage)) {
+        res.status(400).json({
+          error: `Split percentages for this release cannot exceed ${SHARE_CAP}%. Only ${formatShareForMessage(remaining)}% remains available.`,
+        });
+        return;
+      }
     }
 
     try {
