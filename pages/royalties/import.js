@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { uploadRoyaltyCSV } from '../../lib/uploadRoyaltyCSV';
 
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
 
@@ -119,18 +120,20 @@ export default function RoyaltiesImportPage() {
     }
 
     setIsSubmitting(true);
-    setStatus({ type: 'loading', message: 'Importing statement…' });
-
-    const formData = new FormData();
-    formData.append('file', file);
+    setStatus({ type: 'loading', message: 'Uploading statement…' });
 
     try {
+      const { path } = await uploadRoyaltyCSV(file);
+
+      setStatus({ type: 'loading', message: 'Importing statement…' });
+
       const response = await fetch('/api/royalties/import', {
         method: 'POST',
-        body: formData,
         headers: {
+          'Content-Type': 'application/json',
           'x-admin-token': ADMIN_TOKEN,
         },
+        body: JSON.stringify({ storagePath: path }),
       });
       const payload = await response.json();
       if (!response.ok) {
