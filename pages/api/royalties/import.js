@@ -1,22 +1,20 @@
-import { parseForm, MAX_FILE_SIZE } from '../../../lib/api/parseForm';
+// pages/api/royalties/import.js
 import { parseCsv } from '../../../lib/vendor/papaparse';
 import { normalizeEmpireRows } from '../../../lib/royalties-normalizer';
 import { saveImportBatch, getImportHistory } from '../../../lib/royalties';
+import { supabaseAdmin } from '../../../lib/supabaseServer';
 
 const ADMIN_TOKEN = process.env.ADMIN_API_TOKEN || process.env.NEXT_PUBLIC_ADMIN_TOKEN || '';
+const BUCKET = process.env.SUPABASE_BUCKET || 'royalty';
 
 function isAuthorized(req) {
   const headerToken = req.headers['x-admin-token'];
-  if (!ADMIN_TOKEN) {
-    return false;
-  }
-  return typeof headerToken === 'string' && headerToken === ADMIN_TOKEN;
+  return Boolean(ADMIN_TOKEN) && typeof headerToken === 'string' && headerToken === ADMIN_TOKEN;
 }
 
+// JSON body only. No multipart.
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  api: { bodyParser: { sizeLimit: '1mb' } },
 };
 
 export default async function handler(req, res) {
@@ -37,32 +35,36 @@ export default async function handler(req, res) {
     return;
   }
 
-  const contentType = req.headers['content-type'] || '';
-  if (!contentType.includes('multipart/form-data')) {
-    res.status(400).json({ ok: false, error: 'Requests must be multipart/form-data with a CSV file.' });
-    return;
-  }
-
   try {
-    const { files } = await parseForm(req);
-    if (!files.length) {
-      throw new Error('CSV file missing from request. Expected form field "file".');
+    const { path } = req.body || {};
+    if (!path) {
+      res.status(400).json({ ok: false, error: 'Missing "path" in JSON body.' });
+      return;
     }
 
-    const upload = files.find((file) => file.fieldName === 'file') || files[0];
-    const csvText = upload.buffer.toString('utf8');
-    const parsed = parseCsv(csvText, { header: true, skipEmptyLines: true });
+    // Download CSV from Supabase Storage
+    const { data, error } = await supabaseAdmin.storage.from(BUCKET).download(path);
+    if (error) {
+      res.status(500).json({ ok: false, error: `Storage download failed: ${error.message}` });
+      return;
+    }
 
-    if (!parsed.data.length) {
-      throw new Error('No data rows were detected in the uploaded CSV.');
+    // data is a Blob in Node; convert to text
+    const csvText = await data.text();
+
+    const parsed = parseCsv(csvText, { header: true, skipEmptyLines: true });
+    if (!parsed.data?.length) {
+      res.status(400).json({ ok: false, error: 'No data rows detected in the CSV.' });
+      return;
     }
 
     const normalized = normalizeEmpireRows(parsed.data);
+
     const result = await saveImportBatch({
       ...normalized,
       batchMeta: {
         source: 'EMPIRE',
-        originalFilename: upload.filename,
+        originalFilename: path.split('/').pop() || 'uploaded.csv',
         importedBy: 'admin-api',
         status: 'completed',
         warnings: normalized.warnings,
@@ -84,12 +86,7 @@ export default async function handler(req, res) {
         parseErrors: parsed.errors,
       },
     });
-  } catch (error) {
-    const statusCode = error.statusCode || (error.code === 'LIMIT_FILE_SIZE' ? 413 : 400);
-    if (statusCode === 413 || error.message === 'File too large') {
-      res.status(413).json({ ok: false, error: 'File too large', maxFileSize: MAX_FILE_SIZE });
-      return;
-    }
-    res.status(statusCode).json({ ok: false, error: error.message || 'Import failed.' });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e?.message || 'Import failed.' });
   }
 }
