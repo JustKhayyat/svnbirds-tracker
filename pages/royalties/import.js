@@ -123,11 +123,7 @@ export default function RoyaltiesImportPage() {
     setStatus({ type: 'loading', message: 'Uploading statement…' });
 
     try {
-codex/fix-csv-upload-413-error-g6ikd8
       const { path } = await uploadRoyaltyCSV(file, { adminToken: ADMIN_TOKEN });
-
-      const { path } = await uploadRoyaltyCSV(file);
- main
 
       setStatus({ type: 'loading', message: 'Importing statement…' });
 
