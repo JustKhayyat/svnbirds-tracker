@@ -19,32 +19,46 @@ export default async function handler(req, res) {
     if (!serviceRole) return res.status(500).json({ error: "Missing SUPABASE_SERVICE_ROLE_KEY" });
 
     // parse body
-    const { filename, contentType } = req.body && typeof req.body === "object" ? req.body : JSON.parse(req.body || "{}");
+    let body = req.body;
+    if (typeof body === "string") {
+      try { body = JSON.parse(body); } catch (e) { return res.status(400).json({ error: "Invalid JSON body." }); }
+    }
+    const { filename, contentType } = body || {};
     if (!filename || !contentType) return res.status(400).json({ error: "Missing filename or contentType" });
 
     // debug (non-sensitive). Remove after verification.
     console.log("upload-url debug", { bucket, projectUrlPresent: Boolean(projectUrl), hasServiceRole: Boolean(serviceRole) });
 
-    // ensure no leading slash
-    const safePath = encodeURIComponent(filename.replace(/^\/+/, ""));
+    // ensure no leading slash and do not double-encode slashes
+    const safeName = String(filename).replace(/^\/+/, "");
+    const safePath = encodeURIComponent(safeName);
 
     // call Supabase storage sign endpoint
     const signEndpoint = `${projectUrl}/storage/v1/object/sign/${encodeURIComponent(bucket)}/${safePath}`;
+
+    // debug: log endpoint then call Supabase sign endpoint including contentType
+    console.log("upload-url signEndpoint", signEndpoint);
+
     const signResp = await fetch(signEndpoint, {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${serviceRole}`,
         apikey: serviceRole,
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ expiresIn: 3600 }), // required
+      body: JSON.stringify({ expiresIn: 3600, contentType }),
     });
 
-    const signJson = await signResp.json();
+    // capture raw response for debugging
+    const signText = await signResp.text();
+    console.log("upload-url signRespStatus", signResp.status);
+    console.log("upload-url signRespBody", signText);
+
+    let signJson;
+    try { signJson = JSON.parse(signText); } catch (e) { signJson = signText; }
 
     if (!signResp.ok) {
-      // return clear error and include supabase body for debugging
-      return res.status(502).json({ error: "Supabase sign error", detail: signJson });
+      return res.status(502).json({ error: "Supabase sign error", status: signResp.status, detail: signJson });
     }
 
     // preserve shape: return signed url and object key if present
