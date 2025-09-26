@@ -153,7 +153,7 @@ model PayoutBatch {
   totalAmount   Float     @default(0)
   currency      String    @default("USD")
   payoutCount   Int       @default(0)
-  metadata      Json      
+  metadata      Json      @default({})
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   payouts       Payout[]
@@ -202,7 +202,7 @@ model PayoutAuditLog {
   payoutId  String
   eventType String
   message   String?
-  detail    Json     
+  detail    Json     @default({})
   createdAt DateTime @default(now())
   payout    Payout   @relation(fields: [payoutId], references: [id], onDelete: Cascade)
 
