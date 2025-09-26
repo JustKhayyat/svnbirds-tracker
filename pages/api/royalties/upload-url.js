@@ -62,57 +62,97 @@ export default async function handler(req, res) {
     return;
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const bucket = process.env.SUPABASE_BUCKET || process.env.NEXT_PUBLIC_SUPABASE_BUCKET || 'royalty';
 
-  if (!supabaseUrl || !serviceKey) {
-    res.status(500).json({ error: 'Supabase environment variables are not configured.' });
+  console.log('upload-url debug', {
+    bucket,
+    projectUrlPresent: Boolean(projectUrl),
+    hasServiceRole: Boolean(serviceRole),
+  });
+
+  if (!projectUrl) {
+    res.status(500).json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL / SUPABASE_URL' });
     return;
   }
 
-  const { filename = 'statement.csv', contentType = 'text/csv', path } = req.body || {};
+  if (!serviceRole) {
+    res.status(500).json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' });
+    return;
+  }
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (error) {
+      res.status(400).json({ error: 'Invalid JSON body.' });
+      return;
+    }
+  }
+
+  if (!body || typeof body !== 'object') {
+    res.status(400).json({ error: 'Request body must be a JSON object.' });
+    return;
+  }
+
+  const { filename, contentType, path } = body;
+
+  if (!filename || !contentType) {
+    res.status(400).json({ error: 'Both filename and contentType are required.' });
+    return;
+  }
 
   const sanitizedName = String(filename).replace(/[^a-zA-Z0-9.\-_]/g, '_');
   const objectPath = typeof path === 'string' && path ? path : `${Date.now()}-${sanitizedName}`;
 
-  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/upload/sign/${encodeURIComponent(
-    bucket
+  const supabaseUrl = projectUrl.replace(/\/$/, '');
+  const signUrl = `${supabaseUrl}/storage/v1/object/sign/${encodeURIComponent(bucket)}/${encodeURIComponent(
+    objectPath
   )}`;
 
   try {
-    const bucketReady = await ensureBucketExists({ supabaseUrl, serviceKey, bucket });
+    const bucketReady = await ensureBucketExists({ supabaseUrl: projectUrl, serviceKey: serviceRole, bucket });
 
     if (!bucketReady) {
       res.status(500).json({ error: `Supabase bucket "${bucket}" is not available.` });
       return;
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(signUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${serviceKey}`,
-        apikey: serviceKey,
+        Authorization: `Bearer ${serviceRole}`,
+        apikey: serviceRole,
       },
-      body: JSON.stringify({
-        expiresIn: 60,
-        upsert: true,
-        contentType,
-        objectName: objectPath,
-        path: objectPath,
-        name: objectPath,
-        bucketId: bucket,
-      }),
+      body: JSON.stringify({ expiresIn: 3600 }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      res.status(500).json({ error: errorText || 'Unable to create Supabase upload URL.' });
+      let errorPayload;
+      try {
+        errorPayload = await response.json();
+      } catch (error) {
+        errorPayload = await response.text();
+      }
+      const message =
+        typeof errorPayload === 'string'
+          ? errorPayload || 'Unable to create Supabase upload URL.'
+          : JSON.stringify(errorPayload);
+      res
+        .status(response.status >= 400 ? response.status : 500)
+        .json({ error: message || 'Unable to create Supabase upload URL.' });
       return;
     }
 
     const payload = await response.json();
+    if (!payload || typeof payload !== 'object') {
+      res.status(500).json({ error: 'Invalid response from Supabase sign endpoint.' });
+      return;
+    }
+
     res.status(200).json({
       path: objectPath,
       signedUrl: payload.signedUrl || payload.url || '',
