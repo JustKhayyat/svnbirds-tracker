@@ -115,7 +115,7 @@ model SplitAgreement {
   agreementType   String?
   effectiveDate   DateTime?
   createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  updatedAt       DateTime      @default(now())
   release         Release       @relation(fields: [releaseId], references: [id], onDelete: Cascade)
   collaborator    Collaborator  @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
 
@@ -190,7 +190,7 @@ model PayableItem {
   amount               Float
   sharePercentage      Float?
   createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  updatedAt            DateTime          @default(now())
   payout               Payout            @relation(fields: [payoutId], references: [id], onDelete: Cascade)
   statementLine        StatementLine     @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
   statementLineSplit   StatementLineSplit? @relation(fields: [statementLineSplitId], references: [id], onDelete: SetNull)
