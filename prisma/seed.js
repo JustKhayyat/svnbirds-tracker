@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+let prisma;
 
 async function main() {
+  prisma = (await import('../lib/prisma.js')).default;
+
   console.log('Clearing existing data...');
   await prisma.statementLineSplit.deleteMany();
   await prisma.statementLine.deleteMany();
@@ -167,5 +167,7 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    if (prisma) {
+      await prisma.$disconnect();
+    }
   });
