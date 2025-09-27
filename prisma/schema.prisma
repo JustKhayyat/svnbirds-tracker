@@ -4,7 +4,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 model Release {
@@ -107,16 +108,16 @@ model StatementLineSplit {
 }
 
 model SplitAgreement {
-  id             String        @id @default(cuid())
-  releaseId      String
-  collaboratorId String
+  id              String        @id @default(cuid())
+  releaseId       String
+  collaboratorId  String
   sharePercentage Float?
-  agreementType  String?
-  effectiveDate  DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  release        Release       @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  collaborator   Collaborator  @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  agreementType   String?
+  effectiveDate   DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  release         Release       @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  collaborator    Collaborator  @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
 
   @@unique([releaseId, collaboratorId])
   @@map("split_agreements")
@@ -143,20 +144,20 @@ model RoyaltyImportBatch {
 }
 
 model PayoutBatch {
-  id            String    @id @default(cuid())
-  status        String    @default("pending")
-  processor     String?
+  id              String    @id @default(cuid())
+  status          String    @default("pending")
+  processor       String?
   processorBatchId String?
-  requestedBy   String?
-  requestedAt   DateTime  @default(now())
-  processedAt   DateTime?
-  totalAmount   Float     @default(0)
-  currency      String    @default("USD")
-  payoutCount   Int       @default(0)
-  metadata      Json      
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  payouts       Payout[]
+  requestedBy     String?
+  requestedAt     DateTime  @default(now())
+  processedAt     DateTime?
+  totalAmount     Float     @default(0)
+  currency        String    @default("USD")
+  payoutCount     Int       @default(0)
+  metadata        Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  payouts         Payout[]
 
   @@map("payout_batches")
 }
@@ -202,7 +203,7 @@ model PayoutAuditLog {
   payoutId  String
   eventType String
   message   String?
-  detail    Json     
+  detail    Json
   createdAt DateTime @default(now())
   payout    Payout   @relation(fields: [payoutId], references: [id], onDelete: Cascade)
 
