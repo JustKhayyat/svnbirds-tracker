@@ -11,13 +11,15 @@ async function loadRoyaltiesModule() {
 }
 
 async function saveImportBatchDefault(payload) {
-  const module = await loadRoyaltiesModule();
-  return module.saveImportBatch(payload);
+  codex/fix-supabase-upload-flow-and-build-issues-ymxnjg
+  const royaltiesModule = await loadRoyaltiesModule();
+  return royaltiesModule.saveImportBatch(payload);
 }
 
 async function getImportHistoryDefault() {
-  const module = await loadRoyaltiesModule();
-  return module.getImportHistory();
+  const royaltiesModule = await loadRoyaltiesModule();
+  return royaltiesModule.getImportHistory();
+
 }
 
 function resolveFetch(fetchImpl) {
