@@ -1,30 +1,30 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model Release {
-  id              String              @id @default(cuid())
+  id              String           @id @default(cuid())
   title           String?
   primaryArtist   String?
-  artists         String[]            @default([])
+  artists         String[]         @default([])
   releaseDate     DateTime?
-  status          String              @default("planned")
+  status          String           @default("planned")
   platformLinks   Json
   coverArt        String?
-  type            String?             @default("single")
+  type            String?          @default("single")
   notes           String?
   label           String?
-  upc             String?             @unique
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  statementLines  StatementLine[]
+  upc             String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   splitAgreements SplitAgreement[]
+  statementLines  StatementLine[]
 
   @@map("releases")
 }
@@ -37,15 +37,15 @@ model Collaborator {
   payeeReference String?
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
-  splits         StatementLineSplit[]
-  agreements     SplitAgreement[]
   payouts        Payout[]
+  agreements     SplitAgreement[]
+  splits         StatementLineSplit[]
 
   @@map("collaborators")
 }
 
 model RoyaltyStatement {
-  id            String              @id @default(cuid())
+  id            String               @id @default(cuid())
   provider      String
   reference     String?
   periodLabel   String?
@@ -53,19 +53,19 @@ model RoyaltyStatement {
   periodEnd     DateTime?
   statementDate DateTime?
   currency      String
-  totalAmount   Float               @default(0)
-  totalUnits    Float               @default(0)
+  totalAmount   Float                @default(0)
+  totalUnits    Float                @default(0)
   metadata      Json
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  lines         StatementLine[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
   batches       RoyaltyImportBatch[]
+  lines         StatementLine[]
 
   @@map("royalty_statements")
 }
 
 model StatementLine {
-  id           String              @id @default(cuid())
+  id           String               @id @default(cuid())
   statementId  String
   releaseId    String?
   sequence     Int?
@@ -74,50 +74,50 @@ model StatementLine {
   usageDate    DateTime?
   service      String?
   territory    String?
-  units        Float               @default(0)
-  netRevenue   Float               @default(0)
+  units        Float                @default(0)
+  netRevenue   Float                @default(0)
   grossRevenue Float?
   fee          Float?
   currency     String
-  payoutStatus String              @default("pending")
+  payoutStatus String               @default("pending")
   metadata     Json
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  statement    RoyaltyStatement    @relation(fields: [statementId], references: [id], onDelete: Cascade)
-  release      Release?            @relation(fields: [releaseId], references: [id], onDelete: SetNull)
-  splits       StatementLineSplit[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
   payableItems PayableItem[]
+  splits       StatementLineSplit[]
+  release      Release?             @relation(fields: [releaseId], references: [id])
+  statement    RoyaltyStatement     @relation(fields: [statementId], references: [id], onDelete: Cascade)
 
   @@map("statement_lines")
 }
 
 model StatementLineSplit {
-  id              String           @id @default(cuid())
+  id              String        @id @default(cuid())
   statementLineId String
   collaboratorId  String?
   sharePercentage Float?
   amount          Float?
-  payoutStatus    String           @default("pending")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  statementLine   StatementLine    @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
-  collaborator    Collaborator?    @relation(fields: [collaboratorId], references: [id], onDelete: SetNull)
+  payoutStatus    String        @default("pending")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   payableItems    PayableItem[]
+  collaborator    Collaborator? @relation(fields: [collaboratorId], references: [id])
+  statementLine   StatementLine @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
 
   @@map("statement_line_splits")
 }
 
 model SplitAgreement {
-  id              String        @id @default(cuid())
+  id              String       @id @default(cuid())
   releaseId       String
   collaboratorId  String
   sharePercentage Float?
   agreementType   String?
   effectiveDate   DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now())
-  release         Release       @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  collaborator    Collaborator  @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now())
+  collaborator    Collaborator @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  release         Release      @relation(fields: [releaseId], references: [id], onDelete: Cascade)
 
   @@unique([releaseId, collaboratorId])
   @@map("split_agreements")
@@ -144,20 +144,20 @@ model RoyaltyImportBatch {
 }
 
 model PayoutBatch {
-  id              String    @id @default(cuid())
-  status          String    @default("pending")
-  processor       String?
+  id               String    @id @default(cuid())
+  status           String    @default("pending")
+  processor        String?
   processorBatchId String?
-  requestedBy     String?
-  requestedAt     DateTime  @default(now())
-  processedAt     DateTime?
-  totalAmount     Float     @default(0)
-  currency        String    @default("USD")
-  payoutCount     Int       @default(0)
-  metadata        Json
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  payouts         Payout[]
+  requestedBy      String?
+  requestedAt      DateTime  @default(now())
+  processedAt      DateTime?
+  totalAmount      Float     @default(0)
+  currency         String    @default("USD")
+  payoutCount      Int       @default(0)
+  metadata         Json
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  payouts          Payout[]
 
   @@map("payout_batches")
 }
@@ -174,26 +174,26 @@ model Payout {
   retryCount     Int              @default(0)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  batch          PayoutBatch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  collaborator   Collaborator     @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
   payableItems   PayableItem[]
   auditLogs      PayoutAuditLog[]
+  batch          PayoutBatch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  collaborator   Collaborator     @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
 
   @@map("payouts")
 }
 
 model PayableItem {
-  id                   String            @id @default(cuid())
+  id                   String              @id @default(cuid())
   payoutId             String
   statementLineId      String
   statementLineSplitId String?
   amount               Float
   sharePercentage      Float?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @default(now())
-  payout               Payout            @relation(fields: [payoutId], references: [id], onDelete: Cascade)
-  statementLine        StatementLine     @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
-  statementLineSplit   StatementLineSplit? @relation(fields: [statementLineSplitId], references: [id], onDelete: SetNull)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @default(now())
+  payout               Payout              @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  statementLine        StatementLine       @relation(fields: [statementLineId], references: [id], onDelete: Cascade)
+  statementLineSplit   StatementLineSplit? @relation(fields: [statementLineSplitId], references: [id])
 
   @@map("payable_items")
 }
