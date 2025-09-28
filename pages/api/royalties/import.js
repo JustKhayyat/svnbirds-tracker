@@ -18,7 +18,6 @@ async function saveImportBatchDefault(payload) {
 async function getImportHistoryDefault() {
   const royaltiesModule = await loadRoyaltiesModule();
   return royaltiesModule.getImportHistory();
-
 }
 
 function resolveFetch(fetchImpl) {
@@ -29,9 +28,7 @@ function resolveFetch(fetchImpl) {
 
 function isAuthorized(req, adminToken) {
   const headerToken = req.headers['x-admin-token'];
-  if (!adminToken) {
-    return false;
-  }
+  if (!adminToken) return false;
   return typeof headerToken === 'string' && headerToken === adminToken;
 }
 
@@ -64,13 +61,7 @@ export function createImportHandler({
       const [prefix, ...rest] = username.split('.');
       const projectRef = rest.join('.') || '';
 
-      return {
-        username,
-        userPrefix: prefix || '',
-        projectRef,
-        host,
-        port,
-      };
+      return { username, userPrefix: prefix || '', projectRef, host, port };
     } catch (error) {
       console.error('Unable to parse DATABASE_URL for diagnostics', error);
       return null;
@@ -82,7 +73,10 @@ export function createImportHandler({
     if (!details) return null;
 
     const hostWithPort = details.port ? `${details.host}:${details.port}` : details.host;
+    const expectedHost = 'aws-1-ap-southeast-1.pooler.supabase.com';
     const needsProjectRef = details.projectRef !== 'bvywkbqhmtsgeevwzbba';
+    const needsHost = details.host !== expectedHost;
+    const needsPort = details.port !== '6543';
 
     const diagnostics = {
       user: details.username,
@@ -91,10 +85,14 @@ export function createImportHandler({
       host: hostWithPort,
     };
 
+    const hints = [];
     if (needsProjectRef) {
-      diagnostics.hint =
-        'Expected DATABASE_URL user to include ".bvywkbqhmtsgeevwzbba" (Supabase project ref).';
+      hints.push('Expected DATABASE_URL user to include ".bvywkbqhmtsgeevwzbba" (Supabase project ref).');
     }
+    if (needsHost || needsPort) {
+      hints.push('Expected DATABASE_URL host "aws-1-ap-southeast-1.pooler.supabase.com" and port "6543" (transaction pooler).');
+    }
+    if (hints.length) diagnostics.hint = hints.join(' ');
 
     return diagnostics;
   }
@@ -106,26 +104,20 @@ export function createImportHandler({
       database: diagnostics
         ? {
             user: diagnostics.userPrefix
-              ? `${diagnostics.userPrefix.slice(0, 4)}…${
-                  diagnostics.projectRef ? diagnostics.projectRef.slice(-4) : ''
-                }`
+              ? `${diagnostics.userPrefix.slice(0, 4)}…${diagnostics.projectRef ? diagnostics.projectRef.slice(-4) : ''}`
               : 'unknown',
             host: diagnostics.host,
             hint: diagnostics.hint,
           }
         : undefined,
     };
-
     console.error('CSV import failed', logPayload);
   }
 
   async function importCsvBuffer(buffer, filename) {
     const csvText = buffer.toString('utf8');
     const parsed = parseCsv(csvText, { header: true, skipEmptyLines: true });
-
-    if (!parsed.data.length) {
-      throw new Error('No data rows were detected in the uploaded CSV.');
-    }
+    if (!parsed.data.length) throw new Error('No data rows were detected in the uploaded CSV.');
 
     const normalized = normalizeEmpireRows(parsed.data);
     const result = await saveImportBatch({
@@ -186,17 +178,13 @@ export function createImportHandler({
         const bodyBuffer = await readRequestBody(req);
         const payload = JSON.parse(bodyBuffer.toString('utf8') || '{}');
         const storagePath = payload.storagePath;
-        if (!storagePath) {
-          throw new Error('Request missing required "storagePath".');
-        }
+        if (!storagePath) throw new Error('Request missing required "storagePath".');
 
         if (!supabaseUrl || !supabaseServiceKey) {
           throw new Error('Supabase environment variables are not configured.');
         }
 
-        const downloadUrl = `${supabaseUrl}/storage/v1/object/${encodeURIComponent(
-          storageBucket
-        )}/${encodeURIComponent(storagePath)}`;
+        const downloadUrl = `${supabaseUrl}/storage/v1/object/${encodeURIComponent(storageBucket)}/${encodeURIComponent(storagePath)}`;
 
         const response = await fetcher(downloadUrl, {
           headers: {
@@ -215,16 +203,12 @@ export function createImportHandler({
         importResult = await importCsvBuffer(buffer, filename);
       } else if (contentType.includes('multipart/form-data')) {
         const { files } = await parseMultipartForm(req);
-        if (!files.length) {
-          throw new Error('CSV file missing from request. Expected form field "file".');
-        }
+        if (!files.length) throw new Error('CSV file missing from request. Expected form field "file".');
 
         const upload = files.find((file) => file.fieldName === 'file') || files[0];
         importResult = await importCsvBuffer(upload.buffer, upload.filename);
       } else {
-        throw new Error(
-          'Requests must be multipart/form-data with a CSV file or JSON with a "storagePath".'
-        );
+        throw new Error('Requests must be multipart/form-data with a CSV file or JSON with a "storagePath".');
       }
 
       res.status(200).json({ success: true, ...importResult });
@@ -242,9 +226,7 @@ export function createImportHandler({
           projectRef: diagnostics.projectRef,
           host: diagnostics.host,
         };
-        if (diagnostics.hint) {
-          response.hint = diagnostics.hint;
-        }
+        if (diagnostics.hint) response.hint = diagnostics.hint;
       }
 
       res.status(400).json(response);
