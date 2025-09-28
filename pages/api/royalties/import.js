@@ -52,6 +52,87 @@ export function createImportHandler({
 } = {}) {
   const fetcher = resolveFetch(fetchImpl);
 
+  function describeDatabaseEnv() {
+    const rawUrl = process.env.DATABASE_URL || '';
+    if (!rawUrl) return null;
+
+    try {
+      const parsed = new URL(rawUrl);
+      const username = parsed.username || '';
+      const host = parsed.hostname || '';
+      const port = parsed.port || '';
+      const [prefix, ...rest] = username.split('.');
+      const projectRef = rest.join('.') || '';
+
+      return {
+        username,
+        userPrefix: prefix || '',
+        projectRef,
+        host,
+        port,
+      };
+    } catch (error) {
+      console.error('Unable to parse DATABASE_URL for diagnostics', error);
+      return null;
+    }
+  }
+
+  function buildDatabaseDiagnostics() {
+    const details = describeDatabaseEnv();
+    if (!details) return null;
+
+    const hostWithPort = details.port ? `${details.host}:${details.port}` : details.host;
+    const expectedHost = 'aws-1-ap-southeast-1.pooler.supabase.com';
+    const needsProjectRef = details.projectRef !== 'bvywkbqhmtsgeevwzbba';
+    const needsHost = details.host !== expectedHost;
+    const needsPort = details.port !== '6543';
+
+    const diagnostics = {
+      user: details.username,
+      userPrefix: details.userPrefix,
+      projectRef: details.projectRef,
+      host: hostWithPort,
+    };
+
+    const hints = [];
+
+    if (needsProjectRef) {
+      hints.push('Expected DATABASE_URL user to include ".bvywkbqhmtsgeevwzbba" (Supabase project ref).');
+    }
+
+    if (needsHost || needsPort) {
+      hints.push(
+        `Expected DATABASE_URL host to be "${expectedHost}" and port to be "6543" for the Supabase transaction pooler.`
+      );
+    }
+
+    if (hints.length) {
+      diagnostics.hint = hints.join(' ');
+    }
+
+    return diagnostics;
+  }
+
+  function logImportError(error, diagnostics) {
+    const message = error instanceof Error ? error.message : String(error);
+    const logPayload = {
+      message,
+      database: diagnostics
+        ? {
+            user: diagnostics.userPrefix
+              ? `${diagnostics.userPrefix.slice(0, 4)}…${
+                  diagnostics.projectRef ? diagnostics.projectRef.slice(-4) : ''
+                }`
+              : 'unknown',
+            host: diagnostics.host,
+            hint: diagnostics.hint,
+          }
+        : undefined,
+    };
+
+    console.error('CSV import failed', logPayload);
+  }
+
   async function importCsvBuffer(buffer, filename) {
     const csvText = buffer.toString('utf8');
     const parsed = parseCsv(csvText, { header: true, skipEmptyLines: true });
@@ -162,7 +243,25 @@ export function createImportHandler({
 
       res.status(200).json({ success: true, ...importResult });
     } catch (error) {
-      res.status(400).json({ error: error.message || 'Import failed.' });
+      const diagnostics = buildDatabaseDiagnostics();
+      logImportError(error, diagnostics);
+
+      const response = {
+        error: error instanceof Error ? error.message : 'Import failed.',
+      };
+
+      if (diagnostics) {
+        response.database = {
+          user: diagnostics.user,
+          projectRef: diagnostics.projectRef,
+          host: diagnostics.host,
+        };
+        if (diagnostics.hint) {
+          response.hint = diagnostics.hint;
+        }
+      }
+
+      res.status(400).json(response);
     }
   };
 }
