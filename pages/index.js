@@ -1,8 +1,5 @@
-import { useState } from "react";
 import Link from "next/link";
 import styles from "../styles/Home.module.css";
-
-const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN || "";
 
 const rosterModules = [
   {
@@ -41,68 +38,18 @@ const adminModules = [
   {
     name: "VAULT",
     description: "Securely store important assets.",
-    link: "#",
+    link: "/vault", // Changed from "#" to "/vault"
   },
 ];
 
 export default function Dashboard() {
-  const [showAdminForm, setShowAdminForm] = useState(false);
-  const [adminTokenInput, setAdminTokenInput] = useState("");
-  const [adminAccessGranted, setAdminAccessGranted] = useState(false);
-  const [adminError, setAdminError] = useState("");
-
-  const renderModuleCard = (module, { locked = false } = {}) => {
-    const content = (
-      <>
-        <h3>{module.name}</h3>
-        <p>{module.description}</p>
-        {locked ? <span className={styles.moduleBadge}>Locked</span> : null}
-      </>
-    );
-
-    if (locked || module.link === "#") {
-      return (
-        <div key={module.name} className={`${styles.module} ${locked ? styles.moduleLocked : ""}`}>
-          {content}
-        </div>
-      );
-    }
-
+  const renderModuleCard = (module) => {
     return (
       <Link key={module.name} href={module.link} className={styles.module}>
-        {content}
+        <h3>{module.name}</h3>
+        <p>{module.description}</p>
       </Link>
     );
-  };
-
-  const handleAdminToggle = () => {
-    if (adminAccessGranted) {
-      setAdminAccessGranted(false);
-    }
-    setShowAdminForm((prev) => !prev);
-    setAdminError("");
-  };
-
-  const handleAdminUnlock = (event) => {
-    event.preventDefault();
-    if (!ADMIN_TOKEN) {
-      setAdminError("Admin token not configured. Set NEXT_PUBLIC_ADMIN_TOKEN to enable access.");
-      return;
-    }
-    if (adminTokenInput.trim() === ADMIN_TOKEN) {
-      setAdminAccessGranted(true);
-      setAdminError("");
-      setAdminTokenInput("");
-      setShowAdminForm(false);
-    } else {
-      setAdminError("Invalid admin token.");
-    }
-  };
-
-  const handleAdminSignOut = () => {
-    setAdminAccessGranted(false);
-    setAdminTokenInput("");
-    setAdminError("");
   };
 
   return (
@@ -126,39 +73,15 @@ export default function Dashboard() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2>Admin tools</h2>
-            {adminAccessGranted ? (
-              <button type="button" className={styles.adminButton} onClick={handleAdminSignOut}>
-                Sign out
-              </button>
-            ) : (
-              <button type="button" className={styles.adminButton} onClick={handleAdminToggle}>
-                {showAdminForm ? "Hide" : "Admin sign-in"}
-              </button>
-            )}
+            <p>Internal label operations and financial management.</p>
           </div>
-
-          {showAdminForm && !adminAccessGranted ? (
-            <form className={styles.adminForm} onSubmit={handleAdminUnlock}>
-              <input
-                type="password"
-                placeholder="Enter admin token"
-                value={adminTokenInput}
-                onChange={(event) => setAdminTokenInput(event.target.value)}
-              />
-              <button type="submit">Unlock</button>
-              {adminError ? <p className={styles.adminError}>{adminError}</p> : null}
-            </form>
-          ) : null}
-
           <div className={styles.modulesContainer}>
-            {adminModules.map((module) =>
-              renderModuleCard(module, { locked: !adminAccessGranted })
-            )}
+            {adminModules.map((module) => renderModuleCard(module))}
           </div>
         </section>
       </main>
 
-      <footer className={styles.footer}>© 2025 SVNBIRDS Records</footer>
+      <footer className={styles.footer}>© 2026 SVNBIRDS Records</footer>
     </div>
   );
 }
