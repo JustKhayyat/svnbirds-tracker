@@ -1,206 +1,87 @@
-import Image from "next/image";
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import styles from "../styles/BirdEye.module.css";
+import styles from "../styles/Home.module.css";
 
-const DEFAULT_AVATAR = "/default-avatar.svg";
+const rosterModules = [
+  {
+    name: "BIRDEYE",
+    description: "Track Spotify artists with full details.",
+    link: "/birdeye",
+  },
+  {
+    name: "RELEASES",
+    description: "View and manage upcoming releases.",
+    link: "/releases",
+  },
+  {
+    name: "MERCH",
+    description: "Manage merchandise and sales.",
+    link: "/merch",
+  },
+  {
+    name: "TASKS",
+    description: "Track tasks and deadlines for your team.",
+    link: "/tasks",
+  },
+  {
+    name: "ARTIST ROYALTIES",
+    description: "View your statements, balances, and splits.",
+    link: "/artist/dashboard",
+  },
+];
 
-export default function BirdEye() {
-  const [artistName, setArtistName] = useState("");
-  const [artists, setArtists] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [topTracks, setTopTracks] = useState([]);
-  const [albums, setAlbums] = useState([]);
-  const [relatedArtists, setRelatedArtists] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const adminModules = [
+  {
+    name: "ROYALTIES IMPORT",
+    description: "Import distributor statements and reconcile payouts.",
+    link: "/royalties/import",
+  },
+  {
+    name: "VAULT",
+    description: "Securely store important assets.",
+    link: "/vault", // Changed from "#" to "/vault"
+  },
+];
 
-  const fetchArtists = async () => {
-    if (!artistName.trim()) return;
-    setLoading(true);
-    setError(null);
-    setSelected(null);
-    setArtists([]);
-    setTopTracks([]);
-    setAlbums([]);
-    setRelatedArtists([]);
-
-    try {
-      const res = await fetch(`/api/fetchSpotify?name=${encodeURIComponent(artistName)}`);
-      const data = await res.json();
-
-      if (res.ok && data.length > 0) {
-        setArtists(data);
-      } else {
-        setError(data.error || "No artists found");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Error fetching artists");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchFullArtistInfo = async (artistId) => {
-    setLoading(true);
-    try {
-      const [artistRes, topTracksRes, albumsRes, relatedRes] = await Promise.all([
-        fetch(`/api/getArtist?id=${artistId}`).then((r) => r.json()),
-        fetch(`/api/getTopTracks?id=${artistId}`).then((r) => r.json()),
-        fetch(`/api/getAlbums?id=${artistId}`).then((r) => r.json()),
-        fetch(`/api/getRelatedArtists?id=${artistId}`).then((r) => r.json()),
-      ]);
-
-      setSelected(artistRes);
-      setTopTracks(topTracksRes.tracks || []);
-      setAlbums(albumsRes.items || []);
-      setRelatedArtists(relatedRes.artists || []);
-    } catch (err) {
-      console.error(err);
-      setError("Error fetching full artist info");
-    } finally {
-      setLoading(false);
-    }
+export default function Dashboard() {
+  const renderModuleCard = (module) => {
+    return (
+      <Link key={module.name} href={module.link} className={styles.module}>
+        <h3>{module.name}</h3>
+        <p>{module.description}</p>
+      </Link>
+    );
   };
 
   return (
-    <div className={styles.trackerPage}>
-      {/* Back to Dashboard */}
-      <div style={{ width: "100%", textAlign: "left", marginBottom: "1rem" }}>
-        <Link href="/dashboard">
-          <button className={styles.backButton}>← Back to Dashboard</button>
-        </Link>
-      </div>
+    <div className={styles.dashboard}>
+      <header className={styles.header}>
+        <h1>SVNBIRDS CENTRAL</h1>
+        <p className={styles.tagline}>Pick a module to jump into your roster or label workflows.</p>
+      </header>
 
-      {/* Centered Title */}
-      <h1 className={styles.pageTitle}>BirdEye – Artist Tracker</h1>
-
-      {/* Search */}
-      <div className={styles.searchBar}>
-        <input
-          type="text"
-          placeholder="Enter Spotify Artist Name"
-          value={artistName}
-          onChange={(e) => setArtistName(e.target.value)}
-        />
-        <button onClick={fetchArtists}>{loading ? "Searching..." : "Search"}</button>
-      </div>
-
-      {error && <p className={styles.error}>{error}</p>}
-
-      {/* Artist cards */}
-      {!selected && artists.length > 0 && (
-        <div className={styles.grid}>
-          {artists.map((a) => (
-            <div
-              key={a.id}
-              className={styles.card}
-              onClick={() => fetchFullArtistInfo(a.id)}
-            >
-              <Image
-                src={a.images?.[0]?.url || DEFAULT_AVATAR}
-                alt={a.name}
-                width={100}
-                height={100}
-              />
-              <h3>{a.name}</h3>
-              <p>{a.followers?.total?.toLocaleString()} followers</p>
-              <p>{a.genres?.join(", ")}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Full artist info */}
-      {selected && (
-        <div className={styles.detail}>
-          <Image
-            src={selected.images?.[0]?.url || DEFAULT_AVATAR}
-            alt={selected.name}
-            width={180}
-            height={180}
-          />
-          <div className={styles.artistInfo}>
-            <h2>{selected.name}</h2>
-            <p>Followers: {selected.followers?.total?.toLocaleString() ?? 0}</p>
-            <p>Genres: {selected.genres?.join(", ") || "N/A"}</p>
-            <p>Popularity: {selected.popularity ?? "N/A"}/100</p>
-            <a href={selected.external_urls?.spotify} target="_blank" rel="noreferrer" className={styles.button}>
-              Open in Spotify
-            </a>
-
-            {/* Top Tracks */}
-            <div className={styles.section}>
-              <h3>Top Tracks</h3>
-              {topTracks.map((track) => (
-                <div key={track.id} className={styles.track}>
-                  <Image
-                    src={track.album?.images?.[0]?.url || DEFAULT_AVATAR}
-                    alt={track.name}
-                    width={300}
-                    height={300}
-                  />
-                  <p>
-                    {track.name}
-                    {track.album?.name ? ` — ${track.album.name}` : ""}
-                  </p>
-                  {track.preview_url && <audio controls src={track.preview_url}></audio>}
-                  {track.external_urls?.spotify && (
-                    <a href={track.external_urls.spotify} target="_blank" rel="noreferrer">Listen</a>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Albums */}
-            <div className={styles.section}>
-              <h3>Albums</h3>
-              {albums.map((album) => (
-                <div key={album.id} className={styles.albumCard}>
-                  <Image
-                    src={album.images?.[0]?.url || DEFAULT_AVATAR}
-                    alt={album.name}
-                    width={300}
-                    height={300}
-                  />
-                  <p>
-                    {album.name}
-                    {album.release_date ? ` (${album.release_date.split("-")[0]})` : ""}
-                  </p>
-                  {album.external_urls?.spotify && (
-                    <a href={album.external_urls.spotify} target="_blank" rel="noreferrer">Listen</a>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Related Artists */}
-            <div className={styles.section}>
-              <h3>Related Artists</h3>
-              {relatedArtists.map((ra) => (
-                <div key={ra.id} className={styles.relatedCard}>
-                  <Image
-                    src={ra.images?.[0]?.url || DEFAULT_AVATAR}
-                    alt={ra.name}
-                    width={300}
-                    height={300}
-                  />
-                  <p>{ra.name}</p>
-                  <p>{ra.genres?.length ? ra.genres.join(", ") : "N/A"}</p>
-                  {ra.external_urls?.spotify && (
-                    <a href={ra.external_urls.spotify} target="_blank" rel="noreferrer">View</a>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <button className={styles.secondaryButton} onClick={() => setSelected(null)}>
-              ← Back to results
-            </button>
+      <main className={styles.main}>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>Roster tools</h2>
+            <p>Everything artists and managers need day-to-day.</p>
           </div>
-        </div>
-      )}
+          <div className={styles.modulesContainer}>
+            {rosterModules.map((module) => renderModuleCard(module))}
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>Admin tools</h2>
+            <p>Internal label operations and financial management.</p>
+          </div>
+          <div className={styles.modulesContainer}>
+            {adminModules.map((module) => renderModuleCard(module))}
+          </div>
+        </section>
+      </main>
+
+      <footer className={styles.footer}>© 2026 SVNBIRDS Records</footer>
     </div>
   );
 }
